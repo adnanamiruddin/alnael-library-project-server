@@ -2,6 +2,7 @@ from app import app, db
 from app.models.models import Book, BookItem, User, Loan
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime
 
 
 @app.post("/loans")
@@ -46,11 +47,9 @@ def borrow_book():
 @app.put("/loans/<int:loan_id>")
 @jwt_required()
 def return_book(loan_id):
-    data = request.json
-    date_of_return = data["date_of_return"]
     loan = db.session.query(Loan).get(loan_id)
     if loan:
-        loan.date_of_return = date_of_return
+        loan.date_of_return = datetime.now().date()
         loan.status = "returned"
         book_item = (
             db.session.query(BookItem)
