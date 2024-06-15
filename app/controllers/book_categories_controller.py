@@ -1,7 +1,6 @@
 from app import app, db
-from app.models.models import Book, BookCategory, Category
-from flask import request, jsonify
-from flask_jwt_extended import jwt_required
+from app.models.models import Category
+from flask import jsonify
 
 
 @app.get("/books/categories")

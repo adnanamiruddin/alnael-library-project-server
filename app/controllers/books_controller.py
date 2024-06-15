@@ -1,5 +1,13 @@
 from app import app, db
-from app.models.models import Book, BookItem, BookCategory, Category, Loan, Favorite, Review
+from app.models.models import (
+    Book,
+    BookItem,
+    BookCategory,
+    Category,
+    Loan,
+    Favorite,
+    Review,
+)
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required
 
@@ -83,7 +91,8 @@ def get_book_by_id(book_id):
         )
         for book_category in book_categories:
             category = db.session.query(Category).get(book_category.category_id)
-            categories.append(category.name)
+            category_data = {"id": category.id, "name": category.name}
+            categories.append(category_data)
         book_data = {
             "id": book.id,
             "isbn": book.isbn,
@@ -113,6 +122,13 @@ def update_book(book_id):
     book.publication_year = data["publication_year"]
     book.description = data["description"]
     book.stock = data["stock"]
+    # Delete all book categories, then add new book categories
+    db.session.query(BookCategory).filter_by(book_id=book_id).delete()
+    book_category_ids = []
+    for category_id in data["category_ids"]:
+        book_category = BookCategory(book_id=book_id, category_id=category_id)
+        book_category_ids.append(book_category)
+    db.session.bulk_save_objects(book_category_ids)
     db.session.commit()
     book_data = {
         "id": book.id,

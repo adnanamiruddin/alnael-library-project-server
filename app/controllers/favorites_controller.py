@@ -62,8 +62,9 @@ def is_favorite(book_id):
 @app.delete("/favorites/<int:favorite_id>")
 @jwt_required()
 def remove_favorite(favorite_id):
+    user_id = get_jwt_identity()
     favorite = db.session.query(Favorite).get(favorite_id)
-    if favorite:
+    if favorite and favorite.user_id == user_id:
         db.session.delete(favorite)
         db.session.commit()
         return jsonify({"message": "Favorit berhasil dihapus"}), 200

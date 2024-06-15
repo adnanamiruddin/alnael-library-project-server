@@ -43,6 +43,31 @@ def borrow_book():
         return jsonify({"message": "Data buku atau user tidak ditemukan"}), 404
 
 
+@app.put("/loans/<int:loan_id>")
+@jwt_required()
+def return_book(loan_id):
+    data = request.json
+    date_of_return = data["date_of_return"]
+    loan = db.session.query(Loan).get(loan_id)
+    if loan:
+        loan.date_of_return = date_of_return
+        loan.status = "returned"
+        book_item = (
+            db.session.query(BookItem)
+            .filter_by(book_id=loan.book_id, status="borrowed")
+            .first()
+        )
+        book = db.session.query(Book).get(loan.book_id)
+        user = db.session.query(User).get(loan.user_id)
+        # Update value
+        book_item.status = "available"
+        book.stock += 1
+        user.count_of_books_borrowed -= 1
+        db.session.commit()
+        return jsonify({"message": "Buku berhasil dikembalikan"}), 200
+    return jsonify({"message": "Data peminjaman tidak ditemukan"}), 404
+
+
 @app.get("/loans/check/<int:book_id>")
 @jwt_required()
 def is_book_on_loan(book_id):
@@ -126,29 +151,4 @@ def get_loan_by_id(loan_id):
             "user_name": user.first_name + " " + user.last_name,
         }
         return jsonify({"data": loan_data}), 200
-    return jsonify({"message": "Data peminjaman tidak ditemukan"}), 404
-
-
-@app.put("/loans/<int:loan_id>")
-@jwt_required()
-def return_book(loan_id):
-    data = request.json
-    date_of_return = data["date_of_return"]
-    loan = db.session.query(Loan).get(loan_id)
-    if loan:
-        loan.date_of_return = date_of_return
-        loan.status = "returned"
-        book_item = (
-            db.session.query(BookItem)
-            .filter_by(book_id=loan.book_id, status="borrowed")
-            .first()
-        )
-        book = db.session.query(Book).get(loan.book_id)
-        user = db.session.query(User).get(loan.user_id)
-        # Update value
-        book_item.status = "available"
-        book.stock += 1
-        user.count_of_books_borrowed -= 1
-        db.session.commit()
-        return jsonify({"message": "Buku berhasil dikembalikan"}), 200
     return jsonify({"message": "Data peminjaman tidak ditemukan"}), 404

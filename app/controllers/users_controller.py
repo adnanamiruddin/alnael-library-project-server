@@ -66,6 +66,7 @@ def profile():
         "age": user.age,
         "address": user.address,
         "phone_number": user.phone_number,
+        "count_of_books_borrowed": user.count_of_books_borrowed,
         "role": user.role,
     }
     return jsonify({"user": user_data}), 200
